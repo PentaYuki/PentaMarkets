@@ -1,0 +1,16 @@
+{
+  "name": "Pentamarket POS",
+  "short_name": "Pentamarket",
+  "description": "Quầy tính tiền thông minh Pentamarket",
+  "start_url": "/taphoapos.html",
+  "display": "standalone",
+  "background_color": "#fdf6ec",
+  "theme_color": "#e8611a",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
