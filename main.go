@@ -378,14 +378,11 @@ func restock(c *fiber.Ctx) error {
 }
 
 func resetDB(c *fiber.Ctx) error {
-	_, err := db.Exec("DELETE FROM products")
-	if err != nil {
-		return c.Status(500).SendString(err.Error())
-	}
-	_, err = db.Exec("DELETE FROM sqlite_sequence WHERE name='products'")
-	if err != nil {
-		log.Println("Error resetting sequence:", err)
-	}
+	db.Exec("DELETE FROM products")
+	db.Exec("DELETE FROM orders")
+	db.Exec("DELETE FROM order_items")
+	db.Exec("DELETE FROM restock_log")
+	db.Exec("DELETE FROM sqlite_sequence") // Reset all auto-increments
 	seedProducts()
 	return c.JSON(fiber.Map{"message": "Reset successful"})
 }

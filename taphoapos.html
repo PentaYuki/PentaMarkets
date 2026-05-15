@@ -272,7 +272,7 @@ async function init(){
 }
 
 async function loadProducts() {
-  const data = await apiFetch('/api/products');
+  const data = await apiFetch('/api/products?t=' + Date.now());
   if (data) products = data;
 }
 
@@ -459,6 +459,7 @@ async function saveProduct(){
     await loadProducts();
     resetForm(); renderManageList(); fillCatDatalist(); renderTabs(); renderProducts(); renderCart();
     showToast('💾 Đã lưu!');
+    setTimeout(closeManage, 500); // Tự động đóng sau khi lưu thành công
   }
 }
 
