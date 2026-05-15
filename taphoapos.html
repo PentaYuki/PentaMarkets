@@ -414,9 +414,8 @@ async function checkout(){
 
   if (res) {
     showToast('✅ Thanh toán thành công!');
-    clearCart(); document.getElementById('customerMoneyInput').value='';
-    await loadProducts();
-    renderProducts();
+    clearCart();
+    setTimeout(() => location.reload(), 1000); // Tự động F5 sau 1 giây
   }
 }
 
@@ -456,10 +455,8 @@ async function saveProduct(){
   });
 
   if (res) {
-    await loadProducts();
-    resetForm(); renderManageList(); fillCatDatalist(); renderTabs(); renderProducts(); renderCart();
     showToast('💾 Đã lưu!');
-    setTimeout(closeManage, 500); // Tự động đóng sau khi lưu thành công
+    setTimeout(() => location.reload(), 500);
   }
 }
 
@@ -467,10 +464,10 @@ async function deleteProduct(id){
   if(!confirm('Xoá sản phẩm này?'))return;
   const res = await apiFetch(`/api/products/${id}`, { method: 'DELETE' });
   if (res) {
-    await loadProducts();
     delete cart[id];
-    renderManageList(); renderTabs(); renderProducts(); renderCart();
+    saveC();
     showToast('🗑️ Đã xoá');
+    setTimeout(() => location.reload(), 500);
   }
 }
 
@@ -478,10 +475,9 @@ async function resetAllProducts(){
   if(!confirm('Bạn có chắc muốn xoá hết và khôi phục danh sách mặc định?')) return;
   const res = await apiFetch('/api/reset', { method: 'POST' });
   if (res) {
-    await loadProducts();
     cart = {}; saveC();
-    renderManageList(); renderTabs(); renderProducts(); renderCart();
     showToast('🔄 Đã khôi phục mặc định!');
+    setTimeout(() => location.reload(), 1000);
   }
 }
 
