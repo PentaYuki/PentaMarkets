@@ -35,8 +35,8 @@
   .product-card:hover .edit-btn{display:flex}
   .product-card .del-btn{position:absolute;top:6px;right:6px;background:#fee2e2;border:none;border-radius:7px;width:26px;height:26px;display:none;align-items:center;justify-content:center;font-size:13px;cursor:pointer;color:#dc2626;z-index:2;font-weight:700}
   .product-card:hover .del-btn{display:flex}
-  .product-emoji{font-size:36px;line-height:1}
-  .product-name{font-size:12px;font-weight:700;text-align:center;color:var(--text);line-height:1.3}
+  .product-emoji{font-size:42px;line-height:1;margin-bottom:5px;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));}
+  .product-name{font-size:13px;font-weight:800;text-align:center;color:var(--text);line-height:1.3}
   .product-price{font-family:'Baloo 2',cursive;font-size:14px;font-weight:800;color:var(--accent)}
   .product-unit{font-size:10px;color:var(--muted);font-weight:600}
   .cart-panel{background:var(--cart-bg);border-left:2px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
@@ -49,7 +49,7 @@
   .cart-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;font-weight:600}
   .cart-empty .ei{font-size:44px;opacity:.5}
   .cart-item{background:var(--surface);border-radius:12px;border:1.5px solid var(--border);padding:9px 10px;display:flex;align-items:center;gap:8px;}
-  .ci-emoji{font-size:20px;flex-shrink:0}
+  .ci-emoji{font-size:24px;flex-shrink:0;filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));}
   .ci-info{flex:1;min-width:0}
   .ci-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ci-price{font-size:11px;color:var(--muted);font-weight:600}
@@ -303,7 +303,7 @@ function renderProducts(){
       <button class="edit-btn" onclick="event.stopPropagation();editProduct(${p.id})" title="Sửa">✏️</button>
       <button class="del-btn" onclick="event.stopPropagation();deleteProduct(${p.id})" title="Xóa">✕</button>
       ${p.stock < (p.stock_alert || 5) ? `<div style="position:absolute;top:6px;right:6px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:10px;z-index:2">Hết ${p.stock}</div>` : ''}
-      <div class="product-emoji">${p.emoji}</div>
+      <div class="product-emoji">${p.emoji || '📦'}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-price">${fmt(p.price)}</div>
       <div class="product-unit">/ ${p.unit||'cái'} · Tồn: ${p.stock}</div>
@@ -345,7 +345,7 @@ function renderCart(){
     for(const id of ids) {
       const it = cart[id];
       html += `<div class="cart-item">
-        <div class="ci-emoji">${it.emoji}</div>
+        <div class="ci-emoji">${it.emoji || '📦'}</div>
         <div class="ci-info"><div class="ci-name">${it.name}</div><div class="ci-price">${fmt(it.price)} / ${it.unit||'cái'}</div></div>
         <div class="ci-controls">
           <button class="qty-btn minus" onclick="changeQty(${id},-1)">−</button>
