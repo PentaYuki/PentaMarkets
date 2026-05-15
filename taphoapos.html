@@ -48,8 +48,7 @@
   .cart-items{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:7px}
   .cart-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px;font-weight:600}
   .cart-empty .ei{font-size:44px;opacity:.5}
-  .cart-item{background:var(--surface);border-radius:12px;border:1.5px solid var(--border);padding:9px 10px;display:flex;align-items:center;gap:8px;animation:slideIn .18s ease}
-  @keyframes slideIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+  .cart-item{background:var(--surface);border-radius:12px;border:1.5px solid var(--border);padding:9px 10px;display:flex;align-items:center;gap:8px;}
   .ci-emoji{font-size:20px;flex-shrink:0}
   .ci-info{flex:1;min-width:0}
   .ci-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -315,36 +314,48 @@ function renderProducts(){
 function addToCart(id){
   const p=products.find(x=>x.id==id); if(!p)return;
   if (p.stock <= 0) { showToast('⚠️ Hết hàng!', '#e8611a'); return; }
-  cart[id]?cart[id].qty++:(cart[id]={...p,qty:1});
+  const sId = String(id);
+  if(cart[sId]) {
+    cart[sId].qty++;
+  } else {
+    cart[sId] = {...p, qty: 1};
+  }
   saveC(); renderCart();
 }
 function changeQty(id,delta){
-  if(!cart[id])return;
+  const sId = String(id);
+  if(!cart[sId])return;
   const p = products.find(x=>x.id==id);
-  if (delta > 0 && cart[id].qty >= p.stock) { showToast('⚠️ Không đủ hàng!', '#e8611a'); return; }
-  cart[id].qty+=delta;
-  if(cart[id].qty<=0) delete cart[id];
+  if (delta > 0 && cart[sId].qty >= p.stock) { showToast('⚠️ Không đủ hàng!', '#e8611a'); return; }
+  cart[sId].qty+=delta;
+  if(cart[sId].qty<=0) delete cart[sId];
   saveC(); renderCart();
 }
-function clearCart(){ cart={}; document.getElementById('customerMoneyInput').value=''; saveC(); renderCart(); }
+function clearCart(){ cart={}; localStorage.removeItem('taphoa_cart'); renderCart(); }
 
 function renderCart(){
+  console.log('Cart State:', cart);
   const ids=Object.keys(cart);
   document.getElementById('cartCount').textContent=ids.reduce((s,id)=>s+cart[id].qty,0);
   const el=document.getElementById('cartItems'), empty=document.getElementById('cartEmpty');
   if(!ids.length){ el.innerHTML=''; el.appendChild(empty); empty.style.display='flex'; }
   else{
     empty.style.display='none';
-    el.innerHTML=ids.map(id=>{const it=cart[id]; return`<div class="cart-item">
-      <div class="ci-emoji">${it.emoji}</div>
-      <div class="ci-info"><div class="ci-name">${it.name}</div><div class="ci-price">${fmt(it.price)} / ${it.unit||'cái'}</div></div>
-      <div class="ci-controls">
-        <button class="qty-btn minus" onclick="changeQty(${id},-1)">−</button>
-        <div class="qty-val">${it.qty}</div>
-        <button class="qty-btn plus" onclick="changeQty(${id},+1)">+</button>
-      </div>
-      <div class="ci-sub">${fmt(it.price*it.qty)}</div>
-    </div>`;}).join('');
+    let html = '';
+    for(const id of ids) {
+      const it = cart[id];
+      html += `<div class="cart-item">
+        <div class="ci-emoji">${it.emoji}</div>
+        <div class="ci-info"><div class="ci-name">${it.name}</div><div class="ci-price">${fmt(it.price)} / ${it.unit||'cái'}</div></div>
+        <div class="ci-controls">
+          <button class="qty-btn minus" onclick="changeQty(${id},-1)">−</button>
+          <div class="qty-val">${it.qty}</div>
+          <button class="qty-btn plus" onclick="changeQty(${id},1)">+</button>
+        </div>
+        <div class="ci-sub">${fmt(it.price*it.qty)}</div>
+      </div>`;
+    }
+    el.innerHTML = html;
   }
   updateSummary();
   document.getElementById('checkoutBtn').disabled=!ids.length;
