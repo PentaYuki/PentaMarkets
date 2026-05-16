@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pentamarket-v1';
+const CACHE_NAME = 'pentamarket-v2';
 const ASSETS = [
   '/',
   '/taphoapos.html',
