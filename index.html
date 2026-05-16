@@ -111,7 +111,7 @@
         </div>
 
         <div class="footer">
-            © 2026 Pentamarket POS System (v1.0.3)
+            © 2026 Pentamarket POS System (v1.0.4)
         </div>
     </div>
 
@@ -271,12 +271,6 @@
                       Math.sin(dLon / 2) * Math.sin(dLon / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
-        }
-
-        function selectStore(id, name) {
-            localStorage.setItem('pentamarket_store_id', id);
-            localStorage.setItem('pentamarket_store_name', name);
-            window.location.href = '/taphoapos.html';
         }
 
         init();
