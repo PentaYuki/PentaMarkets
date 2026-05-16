@@ -170,7 +170,7 @@ func main() {
 		if pin != "9999" {
 			return c.Status(401).SendString("Unauthorized")
 		}
-		rows, _ := db.Query("SELECT id, name, owner, lat, lng, is_active FROM stores")
+		rows, _ := db.Query("SELECT id, name, owner, lat, lng, is_active, admin_pin, api_key FROM stores")
 		var stores []interface{}
 		for rows.Next() {
 			var s struct {
@@ -180,8 +180,10 @@ func main() {
 				Lat      float64 `json:"lat"`
 				Lng      float64 `json:"lng"`
 				IsActive int     `json:"is_active"`
+				AdminPIN string  `json:"admin_pin"`
+				APIKey   string  `json:"api_key"`
 			}
-			rows.Scan(&s.ID, &s.Name, &s.Owner, &s.Lat, &s.Lng, &s.IsActive)
+			rows.Scan(&s.ID, &s.Name, &s.Owner, &s.Lat, &s.Lng, &s.IsActive, &s.AdminPIN, &s.APIKey)
 			stores = append(stores, s)
 		}
 		return c.JSON(stores)

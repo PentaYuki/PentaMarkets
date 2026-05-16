@@ -59,6 +59,8 @@
                 <th>ID</th>
                 <th>Tên tiệm</th>
                 <th>Chủ tiệm</th>
+                <th>API KEY (Để vào quầy)</th>
+                <th>PIN Admin</th>
                 <th>Tọa độ</th>
                 <th>Thao tác</th>
             </tr>
@@ -89,6 +91,8 @@
                             ${s.is_active ? '' : '<span style="color: #d97706; font-size: 11px;">(Đang chờ duyệt)</span>'}
                         </td>
                         <td>${s.owner}</td>
+                        <td><code style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; color: #4f46e5; font-weight: 700;">${s.api_key || 'Chưa có'}</code></td>
+                        <td><b style="color: #059669;">${s.admin_pin || '1234'}</b></td>
                         <td style="font-family: monospace; font-size: 13px;">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</td>
                         <td style="display: flex; gap: 8px;">
                             ${s.is_active ? 
