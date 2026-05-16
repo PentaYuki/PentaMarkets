@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin - Pentamarket System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+        .card { background: var(--surface); padding: 24px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .label { font-size: 14px; color: #64748b; font-weight: 600; margin-bottom: 8px; }
+        .value { font-size: 28px; font-weight: 800; color: var(--primary); }
+        
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+        th { text-align: left; padding: 16px; background: #f8fafc; border-bottom: 2px solid var(--border); color: #64748b; font-size: 14px; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 15px; }
+        
+        .btn { padding: 8px 16px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .btn-danger { background: #fee2e2; color: #dc2626; }
+        .btn-primary { background: var(--primary); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚙️ Quản trị hệ thống Pentamarket</h1>
+        <button class="btn btn-primary" onclick="window.location.href='/'">Quay lại trang chủ</button>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="label">Tổng số cửa hàng</div>
+            <div class="value" id="countStores">0</div>
+        </div>
+        <div class="card">
+            <div class="label">Tổng số đơn hàng (Toàn sàn)</div>
+            <div class="value" id="countOrders">0</div>
+        </div>
+        <div class="card">
+            <div class="label">Tổng doanh thu hệ thống</div>
+            <div class="value" id="totalRevenue">0 đ</div>
+        </div>
+    </div>
+
+    <h2>Danh sách cửa hàng thành viên</h2>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên tiệm</th>
+                <th>Chủ tiệm</th>
+                <th>Tọa độ</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody id="storeTable"></tbody>
+    </table>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const superPin = urlParams.get('super_pin');
+        if (superPin !== '9999') window.location.href = '/';
+
+        async function loadSystemStats() {
+            try {
+                const res = await fetch(`/api/system/stats?super_pin=${superPin}`);
+                const stats = await res.json();
+                document.getElementById('countStores').textContent = stats.total_stores;
+                document.getElementById('countOrders').textContent = stats.total_orders;
+                document.getElementById('totalRevenue').textContent = stats.total_revenue.toLocaleString() + ' đ';
+
+                const sRes = await fetch(`/api/system/stores/all?super_pin=${superPin}`);
+                const stores = await sRes.json();
+                document.getElementById('storeTable').innerHTML = stores.map(s => `
+                    <tr style="${s.is_active ? '' : 'background: #fffbeb;'}">
+                        <td>#${s.id}</td>
+                        <td style="font-weight: 700;">
+                            ${s.name} 
+                            ${s.is_active ? '' : '<span style="color: #d97706; font-size: 11px;">(Đang chờ duyệt)</span>'}
+                        </td>
+                        <td>${s.owner}</td>
+                        <td style="font-family: monospace; font-size: 13px;">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</td>
+                        <td style="display: flex; gap: 8px;">
+                            ${s.is_active ? 
+                                `<button class="btn btn-danger" onclick="deleteStore(${s.id})">Xóa tiệm</button>` : 
+                                `<button class="btn btn-primary" style="background: #16a34a;" onclick="approveStore(${s.id})">Phê duyệt</button>
+                                 <button class="btn btn-danger" onclick="deleteStore(${s.id})">Từ chối</button>`
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                alert('Lỗi tải dữ liệu hệ thống');
+            }
+        }
+
+        async function approveStore(id) {
+            if (!confirm('Duyệt cho tiệm này hoạt động?')) return;
+            await fetch(`/api/system/stores/approve?super_pin=${superPin}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            loadSystemStats();
+        }
+
+        async function deleteStore(id) {
+            if (!confirm('Bạn có chắc muốn XÓA VĨNH VIỄN tiệm này và mọi dữ liệu liên quan?')) return;
+            await fetch(`/api/system/stores/${id}?super_pin=${superPin}`, { method: 'DELETE' });
+            loadSystemStats();
+        }
+
+        loadSystemStats();
+    </script>
+</body>
+</html>

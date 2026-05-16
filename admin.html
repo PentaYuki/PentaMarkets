@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Pentamarket</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #e8611a;
+            --bg: #f8fafc;
+            --sidebar: #1e293b;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        aside {
+            width: 260px;
+            background: var(--sidebar);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            position: fixed;
+            height: 100vh;
+        }
+        .brand { font-size: 22px; font-weight: 800; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+        nav { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-item.active { background: var(--primary); }
+        
+        /* Main Content */
+        main { flex: 1; margin-left: 260px; padding: 40px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        h1 { font-size: 28px; font-weight: 800; }
+        .store-badge { background: #fff; padding: 8px 16px; border-radius: 12px; border: 1px solid var(--border); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+        /* Dashboard Grid */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px; }
+        .stat-card { background: #fff; padding: 24px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .stat-label { font-size: 14px; color: #64748b; font-weight: 600; margin-bottom: 8px; }
+        .stat-value { font-size: 24px; font-weight: 800; color: var(--primary); }
+
+        /* Tables & Sections */
+        .section { background: #fff; border-radius: 24px; border: 1px solid var(--border); padding: 32px; margin-bottom: 24px; display: none; }
+        .section.active { display: block; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 16px; border-bottom: 2px solid var(--border); color: #64748b; font-size: 14px; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); font-size: 15px; }
+        
+        .btn { padding: 10px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Outfit', sans-serif; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .modal { background: #fff; padding: 32px; border-radius: 24px; width: 500px; max-width: 90vw; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-family: inherit; font-size: 14px; }
+        
+        /* Reports Chart */
+        .chart-container { height: 300px; width: 100%; }
+
+        @media (max-width: 1024px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <aside>
+        <div class="brand">📦 Pentamarket</div>
+        <nav>
+            <div class="nav-item active" onclick="showSection('dashboard', this)">📊 Dashboard</div>
+            <div class="nav-item" onclick="showSection('products', this)">🛒 Sản phẩm</div>
+            <div class="nav-item" onclick="showSection('orders', this)">📋 Đơn hàng</div>
+            <div class="nav-item" onclick="showSection('inventory', this)">📦 Kho hàng</div>
+        </nav>
+        <div class="nav-item" onclick="window.location.href='/taphoapos.html'" style="margin-top: auto; border: 1px solid rgba(255,255,255,0.2)">🏪 Vào Bán Hàng</div>
+    </aside>
+
+    <main>
+        <header>
+            <h1 id="pageTitle">Dashboard</h1>
+            <div class="store-badge">🏪 <span id="storeName">Đang tải...</span></div>
+        </header>
+
+        <!-- DASHBOARD -->
+        <div id="section-dashboard" class="section active">
+            <div class="grid">
+                <div class="stat-card">
+                    <div class="stat-label">Doanh thu hôm nay</div>
+                    <div class="stat-value" id="statTodayRevenue">0 đ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Đơn hàng hôm nay</div>
+                    <div class="stat-value" id="statTodayOrders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sản phẩm sắp hết</div>
+                    <div class="stat-value" id="statLowStock">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Tổng sản phẩm</div>
+                    <div class="stat-value" id="statTotalProducts">0</div>
+                </div>
+            </div>
+            
+            <div class="grid" style="grid-template-columns: 2fr 1fr;">
+                <div class="stat-card">
+                    <div class="stat-label">Doanh thu 30 ngày qua</div>
+                    <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Top sản phẩm</div>
+                    <div class="chart-container"><canvas id="topProductsChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTS -->
+        <div id="section-products" class="section">
+            <div class="section-header">
+                <h2>Danh sách sản phẩm</h2>
+                <button class="btn btn-primary" onclick="openProductModal()">+ Thêm sản phẩm</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Icon</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th>Giá bán</th>
+                        <th>Tồn kho</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="productTable"></tbody>
+            </table>
+        </div>
+
+        <!-- ORDERS -->
+        <div id="section-orders" class="section">
+            <div class="section-header">
+                <h2>Lịch sử đơn hàng</h2>
+                <input type="date" id="orderDateFilter" onchange="loadOrders()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Thời gian</th>
+                        <th>Chi tiết</th>
+                        <th>Thanh toán</th>
+                        <th>Tổng cộng</th>
+                    </tr>
+                </thead>
+                <tbody id="orderTable"></tbody>
+            </table>
+        </div>
+
+        <!-- INVENTORY -->
+        <div id="section-inventory" class="section">
+            <div class="section-header">
+                <h2>Nhập kho sản phẩm</h2>
+            </div>
+            <div style="max-width: 600px;">
+                <div class="form-group">
+                    <label>Chọn sản phẩm</label>
+                    <select id="restockProductSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>Số lượng nhập thêm</label>
+                    <input type="number" id="restockQty" placeholder="Vd: 50">
+                </div>
+                <div class="form-group">
+                    <label>Giá vốn mỗi đơn vị (đ)</label>
+                    <input type="number" id="restockCost" placeholder="Vd: 4500">
+                </div>
+                <div class="form-group">
+                    <label>Ghi chú</label>
+                    <input type="text" id="restockNote" placeholder="Vd: Nhập hàng đợt 1">
+                </div>
+                <button class="btn btn-primary" onclick="submitRestock()">💾 Lưu nhập kho</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- PRODUCT MODAL -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <h2 id="modalTitle">Thêm sản phẩm mới</h2>
+            <br>
+            <input type="hidden" id="fId">
+            <div class="form-group">
+                <label>Tên sản phẩm</label>
+                <input type="text" id="fName">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label>Giá bán (đ)</label>
+                    <input type="number" id="fPrice">
+                </div>
+                <div class="form-group">
+                    <label>Đơn vị</label>
+                    <input type="text" id="fUnit" placeholder="chai/gói...">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Danh mục</label>
+                <input type="text" id="fCat">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label>Icon (Emoji)</label>
+                    <input type="text" id="fEmoji" placeholder="Vd: 🥤">
+                </div>
+                <div class="form-group">
+                    <label>Tồn kho ban đầu</label>
+                    <input type="number" id="fStock">
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeModal()" style="flex: 1">Hủy</button>
+                <button class="btn btn-primary" onclick="saveProduct()" style="flex: 1">Lưu</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pinOverlay" style="position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+        <div class="stat-card" style="width: 320px; text-align: center; padding: 40px;">
+            <div style="font-size: 40px; margin-bottom: 20px;">🔐</div>
+            <h2 style="margin-bottom: 10px;">Nhập mã PIN</h2>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">Vui lòng nhập mã PIN quản trị để tiếp tục.</p>
+            
+            <div id="pinDisplay" style="font-size: 32px; letter-spacing: 12px; margin-bottom: 24px; font-weight: 800; color: var(--primary); min-height: 40px;"></div>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('1')">1</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('2')">2</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('3')">3</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('4')">4</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('5')">5</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('6')">6</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('7')">7</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('8')">8</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('9')">9</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 16px;" onclick="clearPIN()">Xoá</button>
+                <button class="btn btn-secondary" style="height: 60px; font-size: 20px;" onclick="addPIN('0')">0</button>
+                <button class="btn btn-primary" style="height: 60px; font-size: 16px;" onclick="verifyPIN()">OK</button>
+            </div>
+            <p id="pinError" style="color: #dc2626; font-size: 13px; margin-top: 16px; display: none;">Mã PIN không đúng!</p>
+        </div>
+    </div>
+
+    <script>
+        const storeID = localStorage.getItem('pentamarket_store_id');
+        const storeName = localStorage.getItem('pentamarket_store_name');
+        const apiKey = localStorage.getItem('pentamarket_api_key');
+        
+        if (!storeID || !apiKey) window.location.href = '/';
+        document.getElementById('storeName').textContent = storeName;
+
+        let currentPIN = '';
+        function addPIN(num) {
+            if (currentPIN.length < 6) {
+                currentPIN += num;
+                document.getElementById('pinDisplay').textContent = '*'.repeat(currentPIN.length);
+                document.getElementById('pinError').style.display = 'none';
+            }
+        }
+        function clearPIN() {
+            currentPIN = '';
+            document.getElementById('pinDisplay').textContent = '';
+        }
+
+        async function verifyPIN() {
+            const res = await fetch('/api/stores/verify-pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ store_id: parseInt(storeID), pin: currentPIN })
+            });
+            const data = await res.json();
+            if (data.success) {
+                sessionStorage.setItem('pentamarket_admin_auth', 'true');
+                document.getElementById('pinOverlay').style.display = 'none';
+                loadDashboard();
+            } else {
+                currentPIN = '';
+                document.getElementById('pinDisplay').textContent = '';
+                document.getElementById('pinError').style.display = 'block';
+            }
+        }
+
+        // Check auth session
+        if (sessionStorage.getItem('pentamarket_admin_auth') === 'true') {
+            document.getElementById('pinOverlay').style.display = 'none';
+        }
+
+        let revenueChart, topProductsChart;
+
+        function showSection(section, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-' + section).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('pageTitle').textContent = el.textContent.trim();
+            
+            if (section === 'dashboard') loadDashboard();
+            if (section === 'products') loadProducts();
+            if (section === 'orders') loadOrders();
+            if (section === 'inventory') prepareInventory();
+        }
+
+        const API_URL = '';
+        async function apiFetch(endpoint, options = {}) {
+            try {
+                options.headers = options.headers || {};
+                options.headers['X-API-Key'] = apiKey;
+                const sep = endpoint.includes('?') ? '&' : '?';
+                const res = await fetch(`${API_URL}${endpoint}${sep}t=${Date.now()}`, options);
+                if (!res.ok) throw new Error(await res.text());
+                return res.json();
+            } catch (err) {
+                console.error('API Error:', err);
+                return [];
+            }
+        }
+
+        async function loadDashboard() {
+            const products = await apiFetch('/api/products') || [];
+            const orders = await apiFetch('/api/orders?date=today') || [];
+            const daily = await apiFetch('/api/reports/daily') || [];
+            const top = await apiFetch('/api/reports/top-products') || [];
+
+            // Stats
+            document.getElementById('statTotalProducts').textContent = products.length;
+            document.getElementById('statLowStock').textContent = products.filter(p => p.stock <= p.stock_alert).length;
+            document.getElementById('statTodayOrders').textContent = orders.length;
+            document.getElementById('statTodayRevenue').textContent = orders.reduce((s, o) => s + o.total, 0).toLocaleString() + ' đ';
+
+            // Revenue Chart
+            const revCtx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+            
+            const hasDaily = daily && daily.length > 0;
+            revenueChart = new Chart(revCtx, {
+                type: 'line',
+                data: {
+                    labels: hasDaily ? daily.map(d => d.day) : ['Chưa có dữ liệu'],
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: hasDaily ? daily.map(d => d.revenue) : [0],
+                        borderColor: '#e8611a',
+                        backgroundColor: 'rgba(232, 97, 26, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: hasDaily }
+                    }
+                }
+            });
+
+            // Top Products Chart
+            const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            if (topProductsChart) topProductsChart.destroy();
+            const hasTop = top && top.length > 0;
+            topProductsChart = new Chart(topCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: hasTop ? top.map(t => t.name) : ['Chưa có dữ liệu'],
+                    datasets: [{
+                        data: hasTop ? top.map(t => t.sold) : [1],
+                        backgroundColor: hasTop ? ['#e8611a', '#f5c842', '#2e9e5b', '#4f46e5', '#ec4899'] : ['#e2e8f0']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: hasTop }
+                    }
+                }
+            });
+        }
+
+        async function loadProducts() {
+            const products = await apiFetch('/api/products');
+            const tbody = document.getElementById('productTable');
+            tbody.innerHTML = products.map(p => `
+                <tr>
+                    <td style="font-size: 24px;">${p.emoji}</td>
+                    <td style="font-weight: 700;">${p.name}</td>
+                    <td>${p.cat}</td>
+                    <td style="color: var(--primary); font-weight: 700;">${p.price.toLocaleString()} đ</td>
+                    <td><span style="padding: 4px 8px; border-radius: 8px; background: ${p.stock <= p.stock_alert ? '#fee2e2; color: #dc2626' : '#f1f5f9'}">${p.stock}</span></td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="editProduct(${JSON.stringify(p).replace(/"/g, '&quot;')})">Sửa</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadOrders() {
+            const date = document.getElementById('orderDateFilter').value || 'today';
+            const orders = await apiFetch('/api/orders?date=' + date);
+            const tbody = document.getElementById('orderTable');
+            tbody.innerHTML = orders.map(o => `
+                <tr>
+                    <td>#${o.id}</td>
+                    <td>${new Date(o.created_at).toLocaleTimeString('vi-VN')}</td>
+                    <td style="font-size: 13px; color: #64748b;">${o.items.map(i => `${i.name} x${i.qty}`).join(', ')}</td>
+                    <td>${o.pay_method === 'tien' ? '💵 Tiền mặt' : '💳 Thẻ/CK'}</td>
+                    <td style="font-weight: 700; color: var(--primary);">${o.total.toLocaleString()} đ</td>
+                </tr>
+            `).join('');
+        }
+
+        async function prepareInventory() {
+            const products = await apiFetch('/api/products');
+            const select = document.getElementById('restockProductSelect');
+            select.innerHTML = products.map(p => `<option value="${p.id}">${p.name} (Tồn: ${p.stock})</option>`).join('');
+        }
+
+        async function submitRestock() {
+            const data = {
+                product_id: parseInt(document.getElementById('restockProductSelect').value),
+                qty: parseInt(document.getElementById('restockQty').value),
+                cost_per_unit: parseInt(document.getElementById('restockCost').value),
+                note: document.getElementById('restockNote').value
+            };
+            if (!data.qty) return alert('Vui lòng nhập số lượng');
+            await apiFetch('/api/inventory/restock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            alert('Đã nhập kho thành công!');
+            document.getElementById('restockQty').value = '';
+            prepareInventory();
+        }
+
+        function openProductModal() {
+            document.getElementById('fId').value = '';
+            document.getElementById('fName').value = '';
+            document.getElementById('fPrice').value = '';
+            document.getElementById('fUnit').value = '';
+            document.getElementById('fCat').value = '';
+            document.getElementById('fEmoji').value = '📦';
+            document.getElementById('fStock').value = '0';
+            document.getElementById('modalTitle').textContent = 'Thêm sản phẩm mới';
+            document.getElementById('productModal').style.display = 'flex';
+        }
+
+        function editProduct(p) {
+            document.getElementById('fId').value = p.id;
+            document.getElementById('fName').value = p.name;
+            document.getElementById('fPrice').value = p.price;
+            document.getElementById('fUnit').value = p.unit;
+            document.getElementById('fCat').value = p.cat;
+            document.getElementById('fEmoji').value = p.emoji;
+            document.getElementById('fStock').value = p.stock;
+            document.getElementById('modalTitle').textContent = 'Sửa sản phẩm';
+            document.getElementById('productModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('productModal').style.display = 'none'; }
+
+        async function saveProduct() {
+            const p = {
+                id: parseInt(document.getElementById('fId').value) || 0,
+                name: document.getElementById('fName').value,
+                price: parseInt(document.getElementById('fPrice').value),
+                unit: document.getElementById('fUnit').value,
+                cat: document.getElementById('fCat').value,
+                emoji: document.getElementById('fEmoji').value,
+                stock: parseInt(document.getElementById('fStock').value)
+            };
+            await apiFetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(p)
+            });
+            closeModal();
+            loadProducts();
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

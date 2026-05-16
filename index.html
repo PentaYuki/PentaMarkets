@@ -1,10 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <meta http-equiv="refresh" content="0; url=/taphoapos.html" />
-    <title>Redirecting...</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pentamarket - Chọn Cửa Hàng</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #e8611a;
+            --bg: #fdf6ec;
+            --surface: #ffffff;
+            --text: #1e140a;
+            --shadow: rgba(232, 97, 26, 0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 32px;
+            box-shadow: 0 20px 60px var(--shadow);
+            text-align: center;
+        }
+        .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .store-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .store-card {
+            background: #fff;
+            border: 2px solid #f0dfc8;
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .store-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+        .store-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .store-info span {
+            font-size: 14px;
+            color: #888;
+        }
+        .btn-go {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #aaa;
+        }
+    </style>
 </head>
 <body>
-    <p>Redirecting to <a href="/taphoapos.html">POS System</a>...</p>
+    <div class="container">
+        <div class="logo">🏪</div>
+        <h1>Pentamarket</h1>
+        <p>Chào mừng anh/chị. Vui lòng chọn cửa hàng để tiếp tục.</p>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 24px;">
+            <button class="btn-go" style="flex: 1; background: #2e9e5b;" onclick="openReg()">+ Đăng ký tiệm mới</button>
+            <button class="btn-go" style="flex: 1; background: #64748b;" onclick="openSuper()">⚙️ Quản trị hệ thống</button>
+        </div>
+
+        <div class="store-list" id="storeList">
+            <div style="padding: 20px; color: #888;">Đang tải danh sách...</div>
+        </div>
+
+        <div class="footer">
+            © 2026 Pentamarket POS System
+        </div>
+    </div>
+
+    <!-- REGISTRATION MODAL -->
+    <div id="regModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100;">
+        <div class="container" style="max-width: 400px; padding: 30px;">
+            <h2 style="margin-bottom: 20px;">Đăng ký tiệm mới</h2>
+            <div style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
+                <div>
+                    <label style="font-size: 13px; font-weight: 700; color: #666;">Tên tiệm</label>
+                    <input type="text" id="rName" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;" placeholder="Vd: Tạp Hoá Lan">
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 700; color: #666;">Tên chủ tiệm</label>
+                    <input type="text" id="rOwner" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;" placeholder="Vd: Chị Lan">
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 700; color: #666;">Mã PIN quản trị (4 số)</label>
+                    <input type="text" id="rPIN" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;" placeholder="Vd: 1234">
+                </div>
+                <div style="background: #fffbeb; padding: 12px; border-radius: 10px; border: 1px solid #fde68a;">
+                    <label style="font-size: 13px; font-weight: 700; color: #b45309;">🔑 Mã kích hoạt hệ thống</label>
+                    <input type="text" id="rRegKey" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #fde68a; margin-top: 5px;" placeholder="Nhập mã do Admin cấp">
+                </div>
+                <p style="font-size: 12px; color: #16a34a;">📍 Tọa độ sẽ được tự động lấy từ vị trí hiện tại của anh/chị.</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn-go" style="flex: 1; background: #64748b;" onclick="closeReg()">Hủy</button>
+                    <button class="btn-go" style="flex: 1;" onclick="submitReg()">Đăng ký ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userLat = null;
+        let userLng = null;
+
+        async function init() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+                    loadStores();
+                }, err => {
+                    console.warn("Location access denied");
+                    loadStores();
+                });
+            } else {
+                loadStores();
+            }
+        }
+
+        function openReg() { document.getElementById('regModal').style.display = 'flex'; }
+        function closeReg() { document.getElementById('regModal').style.display = 'none'; }
+        
+        async function submitReg() {
+            const data = {
+                name: document.getElementById('rName').value,
+                owner: document.getElementById('rOwner').value,
+                admin_pin: document.getElementById('rPIN').value,
+                reg_key: document.getElementById('rRegKey').value,
+                lat: userLat || 0,
+                lng: userLng || 0
+            };
+            if (!data.name || !data.owner || !data.reg_key) return alert('Vui lòng nhập đủ thông tin và mã kích hoạt');
+            
+            const res = await fetch('/api/stores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                closeReg();
+                // Show API Key to owner
+                alert(`Đăng ký thành công!\n\nAPI KEY của tiệm: ${result.api_key}\n\nHãy LƯU LẠI MÃ NÀY để đăng nhập sau này. Chúng tôi sẽ không hiện lại mã này lần thứ 2.`);
+                loadStores();
+            } else {
+                alert('Lỗi: ' + (result.message || 'Mã kích hoạt không đúng'));
+            }
+        }
+
+        async function selectStore(id, name) {
+            const apiKey = prompt(`Vui lòng nhập API KEY của tiệm "${name}" để vào quầy:`);
+            if (!apiKey) return;
+
+            try {
+                const res = await fetch('/api/stores/verify-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ store_id: id, api_key: apiKey })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('pentamarket_store_id', id);
+                    localStorage.setItem('pentamarket_store_name', name);
+                    localStorage.setItem('pentamarket_api_key', apiKey);
+                    window.location.href = '/taphoapos.html';
+                } else {
+                    alert('API KEY không đúng! Vui lòng thử lại.');
+                }
+            } catch (err) {
+                alert('Lỗi xác thực hệ thống.');
+            }
+        }
+
+        function openSuper() {
+            const pin = prompt('Nhập mã PIN Quản trị hệ thống:');
+            if (pin === '9999') {
+                window.location.href = '/system_admin.html?super_pin=9999';
+            } else if (pin !== null) {
+                alert('Sai mã PIN!');
+            }
+        }
+
+        async function loadStores() {
+            try {
+                const res = await fetch('/api/stores');
+                let stores = await res.json();
+                const list = document.getElementById('storeList');
+
+                if (userLat && userLng) {
+                    stores = stores.map(s => {
+                        const dist = getDistance(userLat, userLng, s.lat, s.lng);
+                        return { ...s, dist };
+                    }).sort((a, b) => a.dist - b.dist);
+                }
+
+                list.innerHTML = stores.map(s => {
+                    const isNearby = s.dist !== undefined && s.dist <= 1;
+                    const distText = s.dist !== undefined ? `${s.dist.toFixed(1)} km` : '';
+                    
+                    return `
+                        <div class="store-card" onclick="selectStore(${s.id}, '${s.name}')">
+                            <div class="store-info">
+                                <h3 style="display: flex; align-items: center; gap: 8px;">
+                                    ${s.name} 
+                                    ${isNearby ? '<span style="background: #dcfce7; color: #16a34a; font-size: 10px; padding: 2px 6px; border-radius: 10px;">📍 Gần đây</span>' : ''}
+                                </h3>
+                                <span>Chủ tiệm: ${s.owner} ${distText ? `· Cách đây ${distText}` : ''}</span>
+                            </div>
+                            <button class="btn-go">Vào bán hàng →</button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                document.getElementById('storeList').innerHTML = '<div style="color: red;">Lỗi kết nối server</div>';
+            }
+        }
+
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function selectStore(id, name) {
+            localStorage.setItem('pentamarket_store_id', id);
+            localStorage.setItem('pentamarket_store_name', name);
+            window.location.href = '/taphoapos.html';
+        }
+
+        init();
+    </script>
 </body>
 </html>
